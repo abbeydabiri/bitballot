@@ -1,0 +1,3 @@
+path: ./frontend/dist
+address: :4040
+contract:
