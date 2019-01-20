@@ -1,71 +1,117 @@
 pragma solidity >=0.4.22 <0.6.0;
 contract Ballot {
+    
+    
+    event Verified(address indexed _voter, bytes32 indexed _proposal);
 
     struct Voter {
-        uint8 vote;
-        string name;
+        bytes32 name;
+        bytes32 idHash;
+        bool isVerified;
+        bool isVoted;
+        bool isUnique;
     }
 
     struct Candidate {
-        string name;
-        string party;
-        uint8 vote;
+        bytes32 name;
+        bytes32 idHash;
+        bytes32 position;
+        bool isAccredited;
+        uint voteCount;
+    }
+    
+    struct Position {
+        bytes32 title;
+        uint8 maxCandidate;
+        mapping(address => bytes32) voted;
     }
 
     struct Proposal {
-        string name;
-        uint voteCount;
+        bytes32 name;
+        uint dateAdded;
+        uint duration;
+        bool isActive;
     }
 
-    address chairperson;
-    mapping(address => Voter) voters;
-    Proposal[] proposals;
+    address initiator;
+    mapping(address => Voter) public mVoters;
+    mapping(address => Candidate) public mCandidates;
+    mapping(bytes32 => Position[]) public mProposalToPositions;
+    mapping(bytes32 => Candidate[]) public mPositionToCanditate;
+    mapping(bytes32 => uint) internal mProposalToIndex;
+    mapping(bytes32 => uint) internal mCandidateToIndex;
+    mapping(bytes32 => uint) mPositionToIndex;
+    Proposal[] public aProposals;
 
-    /// Create a new ballot with $(_numProposals) different proposals.
-    constructor(uint8 _numProposals) public {
-        chairperson = msg.sender;
-        voters[chairperson].weight = 1;
-        proposals.length = _numProposals;
+    constructor() public {
+        initiator = msg.sender;
+    }
+    
+    function addProposal (bytes32 _name, uint _dateAdded, uint _duration) public returns(uint) {
+        uint index = aProposals.push(Proposal(_name, _dateAdded, _duration, false));
+        mProposalToIndex[_name] = index - 1;
+        return index - 1;
+    }
+    
+    function addPosition (bytes32 _title, uint8 _maxCandidate, bytes32 _proposal) public returns(uint) {
+        uint index = mProposalToPositions[_proposal].push(Position(_title, _maxCandidate));
+        mPositionToIndex[_title] = index - 1;
+        return index - 1;
+    }
+    
+    function addCandidate (bytes32 _name, bytes32 _idHash, bytes32 _position) public returns(uint) {
+        uint index = mPositionToCanditate[_position].push(Candidate(_name, _idHash, _position, false, 0));
+        mCandidateToIndex[_name] = index - 1;
+        return index - 1;
+    }
+    
+    function registerVoter(address _voter, bytes32 _name, bytes32 _idHash, bytes32 _proposal) public {
+        require(!mVoters[_voter].isUnique, "Voter already added!");
+        mVoters[_voter].name = _name;
+        mVoters[_voter].idHash = _idHash;
+        mVoters[_voter].isUnique = true;
+        emit Verified(_voter, _proposal);
     }
 
-    /// Give $(toVoter) the right to vote on this ballot.
-    /// May only be called by $(chairperson).
-    function giveRightToVote(address toVoter) public {
-        if (msg.sender != chairperson || voters[toVoter].voted) return;
-        voters[toVoter].weight = 1;
+    function VerifyVoter(address _voter) public returns (bool){
+        require(msg.sender == initiator, "Only the initiator of this ballot proposal can verify a voter");
+        mVoters[_voter].isVerified = true;return true;
     }
-
-    /// Delegate your vote to the voter $(to).
-    function delegate(address to) public {
-        Voter storage sender = voters[msg.sender]; // assigns reference
-        if (sender.voted) return;
-        while (voters[to].delegate != address(0) && voters[to].delegate != msg.sender)
-            to = voters[to].delegate;
-        if (to == msg.sender) return;
-        sender.voted = true;
-        sender.delegate = to;
-        Voter storage delegateTo = voters[to];
-        if (delegateTo.voted)
-            proposals[delegateTo.vote].voteCount += sender.weight;
-        else
-            delegateTo.weight += sender.weight;
+    
+    function accreditCandidate(bytes32 _name, bytes32 _position) public returns (bool){
+        require(msg.sender == initiator, "Only the initiator of this ballot proposal can accredit a Candidate");
+        uint index = mCandidateToIndex[_name];
+        mPositionToCanditate[_position][index].isAccredited = true;
+        return true;
     }
 
     /// Give a single vote to proposal $(toProposal).
-    function vote(uint8 toProposal) public {
-        Voter storage sender = voters[msg.sender];
-        if (sender.voted || toProposal >= proposals.length) return;
-        sender.voted = true;
-        sender.vote = toProposal;
-        proposals[toProposal].voteCount += sender.weight;
+    function vote(bytes32 _proposal, bytes32 _position, bytes32 _candidate) public {
+        uint proposalIndex = mProposalToIndex[_proposal];
+        uint candidateIndex = mCandidateToIndex[_candidate];
+        uint positionIndex = mPositionToIndex[_position];
+        
+        require(aProposals[proposalIndex].isActive, "This proposal is not active for votes!");
+        require(mPositionToCanditate[_position][candidateIndex].isAccredited, "The candidate you want to vote for is not accredited!");
+        require(mVoters[msg.sender].isVerified, "You are not eligible to vote!");
+        require(mProposalToPositions[_proposal][positionIndex].voted[msg.sender] == "", "You have voted in this position already");
+        
+        mPositionToCanditate[_position][candidateIndex].voteCount++;
+        mProposalToPositions[_proposal][positionIndex].voted[msg.sender] = _candidate;
+        
     }
 
-    function winningProposal() public view returns (uint8 _winningProposal) {
+    function winningProposal(bytes32 _proposal, bytes32 _position) public view returns (uint winningVoteCount, bytes32 winningCandidate) {
+        uint positionIndex = mPositionToIndex[_position];
+        
+        require(mProposalToPositions[_proposal][positionIndex].title == _position, "Position not found in the proposal provided");
         uint256 winningVoteCount = 0;
-        for (uint8 prop = 0; prop < proposals.length; prop++)
-            if (proposals[prop].voteCount > winningVoteCount) {
-                winningVoteCount = proposals[prop].voteCount;
-                _winningProposal = prop;
+        bytes32 winningCandidate;
+        
+        for (uint8 vote = 0; vote < mPositionToCanditate[_position].length; vote++)
+            if (mPositionToCanditate[_position][vote].voteCount > winningVoteCount) {
+                winningVoteCount = mPositionToCanditate[_position][vote].voteCount;
+                winningCandidate = mPositionToCanditate[_position][vote].name;
             }
     }
 }
