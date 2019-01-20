@@ -2,12 +2,5 @@
 logger/
 node_modules/
 yarn.lock
-frontend/package-lock.json
-frontend/src/components/.DS_Store
 /vendor/
 .DS_Store
-frontend/.DS_Store
-frontend/src/assets/.DS_Store
-frontend/src/assets/css.DS_Store
-frontend/src/assets/css/.DS_Store
-frontend/src/assets/images/.DS_Store
