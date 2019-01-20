@@ -1,6 +1,3 @@
-.DS_Store
 logger/
 node_modules/
 yarn.lock
-/vendor/
-.DS_Store
