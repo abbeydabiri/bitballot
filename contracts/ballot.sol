@@ -101,9 +101,9 @@ contract Ballot {
         
     }
 
-    function winningProposal(bytes32 _proposal, bytes32 _position) public view returns (uint winningVoteCount, bytes32 winningCandidate) {
+    function winningProposal(bytes32 _proposal, bytes32 _position) public returns (uint winningVoteCount, bytes32 winningCandidate) {
         uint positionIndex = mPositionToIndex[_position];
-        
+        require(aProposals[mProposalToIndex[_proposal]].dateAdded + aProposals[mProposalToIndex[_proposal]].duration == now, "Position not found in the proposal provided");
         require(mProposalToPositions[_proposal][positionIndex].title == _position, "Position not found in the proposal provided");
         uint256 winningVoteCount = 0;
         bytes32 winningCandidate;
@@ -113,5 +113,6 @@ contract Ballot {
                 winningVoteCount = mPositionToCanditate[_position][vote].voteCount;
                 winningCandidate = mPositionToCanditate[_position][vote].name;
             }
+        aProposals[mProposalToIndex[_proposal]].isActive = false;
     }
 }
