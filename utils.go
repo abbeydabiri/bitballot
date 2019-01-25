@@ -50,19 +50,20 @@ func spaFS(httpRes http.ResponseWriter, httpReq *http.Request) {
 	httpRootFS.ServeHTTP(httpRes, httpReq)
 }
 
-func curl(sMethod, sUrl string, byteBody []byte) (string, []byte) {
+func curl(sMethod, sURL string, byteBody []byte) (string, []byte) {
 
-	sUrl = Config.URL + sUrl
-	mapAuthHeader := map[string]string{"Token": Config.Key, "Content-Type": "application/json"}
-	if sUrl == "" {
-		return "Either sUrl or sMethod is missing", nil
+	// sURL = Config.URL + sURL
+	// mapAuthHeader := map[string]string{"Token": Config.Key, "Content-Type": "application/json"}
+	mapAuthHeader := map[string]string{"Content-Type": "application/json"}
+	if sURL == "" {
+		return "Either sURL or sMethod is missing", nil
 	}
 
 	if sMethod == "" {
-		return "Either sUrl or sMethod is missing", nil
+		return "Either sURL or sMethod is missing", nil
 	}
 
-	httpReq, _ := http.NewRequest(sMethod, sUrl, bytes.NewBuffer(byteBody))
+	httpReq, _ := http.NewRequest(sMethod, sURL, bytes.NewBuffer(byteBody))
 	httpReq.Header.Add("Content-Length", strconv.Itoa(len(byteBody)))
 
 	for sKey, sValue := range mapAuthHeader {
