@@ -1,0 +1,5 @@
+ssh-keygen -t rsa -b 4096 -f private.pem
+# Don't add passphrase
+openssl rsa -in private.pem -pubout -outform PEM -out public.pem
+cat private.pem
+cat public.pem.

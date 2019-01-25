@@ -70,7 +70,7 @@ contract Ballot {
         owner = msg.sender;
     }
     
-    function votersCount(bytes32 _proposal) public view returns(uint) {
+    function votersCount() public view returns(uint) {
         return aVoters.length;
     }
     

@@ -1,4 +1,5 @@
+.DS_Store
 logger/
-node_modules/
-yarn.lock
 bitballot_mac.app
+bitballot_win.exe
+bitballot_linux.elf

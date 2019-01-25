@@ -1,3 +1,18 @@
-path: ./frontend/dist
+timezone: Africa/Lagos
+version: v1.0.0.0.0
+cookie: bitballot
+os:
+path:
 address: :4040
-contract:
+adminurl: admin.valued.ng
+encryption_keys:
+  public: public.pem
+  private: private.pem
+
+dbconfig:
+  hostname: localhost
+  database: bitballot
+  password: bitballot
+  username: bitballot
+  port: 5433
+
