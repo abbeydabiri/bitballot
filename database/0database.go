@@ -324,7 +324,11 @@ func (fi Fields) sqlSelect(table Tables, tableMap map[string]interface{}, search
 				if !strings.Contains(fieldName, ".") {
 					fieldName = fmt.Sprintf("%s.%s", tablename, fieldName)
 				}
-				sqlSelect += fmt.Sprintf("lower(%s) like lower($%v) and ", strings.ToLower(fieldName), len(sqlParams))
+				if strings.Contains(strings.ToLower(fieldName), "date") {
+					sqlSelect += fmt.Sprintf("%s like $%v and ", strings.ToLower(fieldName), len(sqlParams))
+				} else {
+					sqlSelect += fmt.Sprintf("lower(%s) like lower($%v) and ", strings.ToLower(fieldName), len(sqlParams))
+				}
 			}
 		}
 	}

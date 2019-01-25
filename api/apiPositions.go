@@ -39,15 +39,15 @@ func apiPositionsPost(httpRes http.ResponseWriter, httpReq *http.Request) {
 		table := database.Positions{}
 		table.FillStruct(tableMap)
 
-		if table.Title == "" {
-			message.Message += "Title is required \n"
+		if table.Workflow == "" {
+			message.Message += "Status is required \n"
 			message.Code = http.StatusInternalServerError
 			json.NewEncoder(httpRes).Encode(message)
 			return
 		}
 
-		if table.Workflow == "" {
-			message.Message += "Status is required \n"
+		if table.Title == "" {
+			message.Message += "Title is required \n"
 			message.Code = http.StatusInternalServerError
 			json.NewEncoder(httpRes).Encode(message)
 			return

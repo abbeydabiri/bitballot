@@ -105,10 +105,10 @@ func apiHandler(middlewares alice.Chain, router *Router) {
 	router.GET("/admin/*page", func(httpRes http.ResponseWriter, httpReq *http.Request, httpParams httprouter.Params) {
 		claims := utils.VerifyJWT(httpRes, httpReq)
 		verifyID(httpRes, httpReq, claims)
-		if claims["IsAdmin"] == nil || !claims["IsAdmin"].(bool) {
-			http.Redirect(httpRes, httpReq, "/", http.StatusTemporaryRedirect)
-			return
-		}
+		// if claims["IsAdmin"] == nil || !claims["IsAdmin"].(bool) {
+		// 	http.Redirect(httpRes, httpReq, "/", http.StatusTemporaryRedirect)
+		// 	return
+		// }
 		fileServe(httpRes, httpReq)
 	})
 

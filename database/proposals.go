@@ -11,7 +11,10 @@ import (
 
 type Proposals struct {
 	Fields
-	openDate, endDate time.Time
+	OpenDate, EndDate time.Time
+
+	OpenDateDay, OpenDateTime,
+	EndDateDay, EndDateTime string
 }
 
 func (table *Proposals) ToMap() (mapInterface map[string]interface{}) {

@@ -9,6 +9,7 @@ import (
 
 	"sort"
 	"strconv"
+	"bitballot/config"
 )
 
 func GetMonthPeriod(now time.Time) (firstDay, lastDay time.Time) {
@@ -30,7 +31,7 @@ const (
 	Month      = 30 * Day
 	Year       = 12 * Month
 	LongTime   = 37 * Year
-	TimeFormat = "02/01/2006 15:04:05 WAT"
+	TimeFormat = "02/01/2006 15:04:05"
 )
 
 var magnitudes = []struct {
@@ -72,7 +73,7 @@ func GetTime() time.Time {
 
 func GetLocalTime() time.Time {
 	curTime := time.Now()
-	loc, err := time.LoadLocation("Africa/Lagos")
+	loc, err := time.LoadLocation(config.Get().Timezone)
 	if err != nil {
 		log.Println(err)
 		return curTime
@@ -84,9 +85,6 @@ func DateTimeMerge(curDate, curTime, location string) time.Time {
 	if curTime == "" {
 		curTime = "15:04"
 	}
-	if location == "" {
-		location = "Africa/Lagos"
-	}
 
 	loc, err := time.LoadLocation(location)
 	if err != nil {
@@ -94,8 +92,8 @@ func DateTimeMerge(curDate, curTime, location string) time.Time {
 		loc = time.UTC
 	}
 
-	tTime, err := time.ParseInLocation("2006-01-02 15:04:05 WAT",
-		fmt.Sprintf("%v %v:05 WAT", curDate, curTime), loc)
+	tTime, err := time.ParseInLocation("2006-01-02 15:04:05",
+		fmt.Sprintf("%v %v:05", curDate, curTime), loc)
 	if err != nil {
 		log.Printf(err.Error())
 	}
@@ -113,12 +111,12 @@ func GetTimeHuman(curTime time.Time) string {
 }
 
 func GetTimeFormat(curTime time.Time) string {
-	return curTime.Format("02/01/2006 15:04:05 WAT")
+	return curTime.Format("02/01/2006 15:04:05")
 }
 
 func GetSystemTime() string {
 	curTime := GetLocalTime()
-	return curTime.Format("02/01/2006 15:04:05 WAT")
+	return curTime.Format("02/01/2006 15:04:05")
 }
 
 func GetSystemDate() string {
@@ -126,7 +124,7 @@ func GetSystemDate() string {
 }
 
 func GetUnixString(cTime string) string {
-	cFormat := "02/01/2006 15:04:05 WAT"
+	cFormat := "02/01/2006 15:04:05"
 	tTime, err := time.Parse(cFormat, cTime)
 	if err != nil {
 		return ""
@@ -214,7 +212,7 @@ func GetDifferenceInMonths(cTimeCur string, cTimePast string) (months int) {
 func GetDifferenceInSeconds(cTimeCur string, cTimePast string) (seconds int) {
 
 	seconds = int(0)
-	cFormat := "Mon, 02 Jan 2006 15:04:05 WAT"
+	cFormat := "Mon, 02 Jan 2006 15:04:05"
 
 	if cTimeCur == "" {
 		cTimeCur = time.Now().Format(cFormat)
@@ -244,7 +242,7 @@ func GetDifferenceInSeconds(cTimeCur string, cTimePast string) (seconds int) {
 
 func GetDuration(cPast, cPresent string) string {
 	cLabel := "ago"
-	cFormat := "02/01/2006 15:04:05 WAT"
+	cFormat := "02/01/2006 15:04:05"
 
 	tPast, err := time.Parse(cFormat, cPast)
 	if err != nil {
