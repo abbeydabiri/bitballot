@@ -2,194 +2,212 @@ pragma solidity >=0.4.22 <0.6.0;
 contract Ballot {
     
     
-    event Verified(address indexed _voter, bytes32 indexed _proposal);
-    event NewProposal(bytes32 indexed _name, uint _endDate);
-    event NewProposalPosition(bytes32 indexed _title, bytes32 indexed _proposal);
-    event NewPositionCandidate(address indexed _candidateAddr, bytes _idHash, bytes32 indexed _position, uint _candidateIndex);
-    event Voted(address _voter, bytes32 indexed _proposal, bytes32 indexed _position, address _candidate);
-    event NewVoter(address indexed _voter, bytes _idHash);
-    event Accredited(address _candidateAddr, bytes32 indexed _position);
-    event ProposalActive(bytes32 indexed _proposal);
+    event Verified(uint indexed _voter, uint indexed _proposal,uint indexed _position);
+    event NewProposal(bytes32 indexed _name, uint indexed _proposalId, uint _endDate);
+    event NewPosition(uint indexed _proposal, uint indexed _position, bytes32 indexed _title);
+    event NewCandidate(uint indexed _proposal, uint indexed _position, uint _candidateId, bytes32 indexed _name);
+    event Voted(uint indexed _proposal, uint indexed _position, uint indexed _candidate, uint _voter, address _voterAddr);
+    event NewVoter(address indexed _voter, uint _idHash);
+    event Accredited(uint indexed _candidate, uint indexed _proposal, uint indexed _position);
+    event ProposalActive(uint indexed _proposal);
     
-    modifier onlyInitiator (bytes32 _proposal) {
-        require(msg.sender == initiator[_proposal], "Only the initiator of this ballot proposal can verify a voter");
+    modifier onlyInitiator () {
+        require(msg.sender == initiator, "Only the initiator of this ballot can perform this action");
         _;
     }
     
-    address public owner;
+    address public initiator;
     
     struct Voter {
-        bytes idHash;
+        uint voterId;
         bool isUnique;
+        address voterAddr;
+    }
+
+    struct Vote {
+        uint proposalId;
+        uint positionId;
+        uint candidateId;
+        uint voterId;
     }
     
-    struct Eligibility {
+    struct EligibleVoter {
         bool isVerified;
         bool isVoted;
-        address voter;
-        uint[] votablePositions;
+        uint positionId; // Users should be able to vote in multiple positions
     }
 
     struct Candidate {
+        uint candidateId;
         uint positionId;
         uint proposalId;
-        uint voteCount;
         bool isAccredited;
+        bool isUnique;
         address candidateAddr;
-        bytes idHash;
+        bytes32 name;
     }
-    
+
     struct Position {
         uint proposalId;
+        uint positionId;
         uint8 maxCandidate;
         bytes32 title;
-        mapping(address => address) voted;
     }
 
     struct Proposal {
-        uint dateAdded;
+        uint proposalId;
+        uint startDate;
         uint endDate;
         bytes32 name;
         bool isActive;
     }
     
-    mapping(bytes32 => address) public initiator;
-    mapping(bytes32 => Position[]) public mProposalToPositions;
-    mapping(bytes32 => Candidate[]) public mPositionToCanditate;
-    mapping(bytes32 => Eligibility[]) public mProposalVoters;
+    struct TrackIndex {
+        uint index;
+        bool isUnique;
+    }
     
-    mapping(bytes32 => uint) internal mProposalToIndex;
-    mapping(address => uint) internal mCandidateToIndex;
-    mapping(bytes32 => uint) internal mPositionToIndex;
-    mapping(address => uint) internal mEligibilityToIndex;
+    mapping(uint => Position[]) public mPosition; // Maps proposal id to all it's positions
+    mapping(uint => mapping(uint => Candidate[])) public mCandidate; // Maps proposal id to position id to candidates
+    mapping(uint => EligibleVoter[]) public mProposalVoters;
+    mapping(uint => mapping(uint => mapping(uint =>mapping(address => bool)))) internal votedCandidate;
+    mapping(uint => mapping(uint => mapping(address => bool))) internal votedPosition;
+    
+    mapping(uint => TrackIndex) internal mProposalToIndex;
+    mapping(uint => TrackIndex) internal mCandidateToIndex;
+    mapping(uint => TrackIndex) internal mPositionToIndex;
+    mapping(uint => uint) internal mEligibilityToIndex;
     mapping(address => uint) internal mVoterToIndex;
     
     Proposal[] public aProposals;
     Voter[] public aVoters;
+    Vote[] public allVotes;
 
     constructor() public {
-        owner = msg.sender;
+        initiator = msg.sender;
+    }
+    
+    function votesCount() public view returns(uint) {
+        return allVotes.length;
     }
     
     function votersCount() public view returns(uint) {
         return aVoters.length;
     }
     
-    function eligibleVotersCount(bytes32 _proposal) public view returns(uint) {
+    function eligibleVotersCount(uint _proposal) public view returns(uint) {
         return mProposalVoters[_proposal].length;
     }
     
-    function proposalPositionCount(bytes32 _position) public view returns(uint) {
-        return mPositionToCanditate[_position].length;
+    function positionsCount(uint _proposal, uint _positionId) public view returns(uint) {
+        return mCandidate[_proposal][_positionId].length;
     }
     
-    function positionToCanditateCount(bytes32 _proposal) public view returns(uint) {
-        return mProposalToPositions[_proposal].length;
+    function candidatesCount(uint _proposal) public view returns(uint) {
+        return mPosition[_proposal].length;
     }
     
-    function getEligibleVoters(bytes32 _proposal, uint _voterIndex) public view returns(bytes memory idHash) {
-        require(mProposalVoters[_proposal][_voterIndex].isVerified, "Not Eligible!");
-        return (aVoters[_voterIndex].idHash);
-    }
-    
-    function addProposal (bytes32 _name, uint _endDate) public returns(uint) {
-        require(mProposalToIndex[_name] > 0, "Proposal already added!");
-        initiator[_name] = msg.sender;
-        uint index = aProposals.push(Proposal( now, _endDate, _name, false));
-        mProposalToIndex[_name] = index - 1;
-        emit NewProposal(_name, _endDate);
-        return index - 1;
-    }
-    
-    function addPosition (bytes32 _title, uint8 _maxCandidate, bytes32 _proposal) public onlyInitiator(_proposal) returns(uint positionId) {
-        uint _IDProposal = mProposalToIndex[_proposal];
-        if(aProposals.length > 0){
-            require(_IDProposal != 0, "Positions can ponly be added to valid proposals");
-        }
-        uint index = mProposalToPositions[_proposal].push(Position(_IDProposal, _maxCandidate, _title));
-        mPositionToIndex[_title] = index - 1;
-        emit NewProposalPosition(_proposal, _title);
-        return index - 1;
-    }
-    
-    function addCandidate (address _candidateAddr, bytes memory _idHash, bytes32 _position, bytes32 _proposal) public onlyInitiator(_proposal) returns(uint) {
-        uint _IDPosition = mPositionToIndex[_position];
-        uint _IDProposal = mPositionToIndex[_position];
-        Proposal memory _proposalInstance = aProposals[_IDProposal];
+    function getEligibleVoters(uint _proposal, address _voterAddr) public view returns(uint voterId, address voterAddr, uint positionId, bool isVerified, bool isVoted) {
+        uint _voterIndex = mVoterToIndex[_voterAddr];
+        uint _eligibleIndex = mEligibilityToIndex[_voterIndex];
+        Voter memory _voter = aVoters[_voterIndex];
+        EligibleVoter memory _eligible = mProposalVoters[_proposal][_eligibleIndex];
+        require(_eligible.isVerified, "Not Eligible!");
         
-        require(!_proposalInstance.isActive && _proposalInstance.endDate > now , "Candidate cannot be added to an active or ended proposal");
-        require(mProposalToPositions[_proposal][_IDPosition].proposalId == _IDProposal , "Candidate cannot be added to a position that does not exist!");
-        require(mProposalToPositions[_proposal][_IDPosition].maxCandidate >= mPositionToCanditate[_position].length, "Position maximum candidate exceeded!");
-        
-        uint index = mPositionToCanditate[_position].push(Candidate(_IDProposal, _IDPosition, 0, false, _candidateAddr, _idHash));
-        mCandidateToIndex[_candidateAddr] = index - 1;
-        emit NewPositionCandidate(_candidateAddr, _idHash, _position, index - 1);
+        return (_voter.voterId, _voter.voterAddr, _eligible.positionId, _eligible.isVerified, _eligible.isVoted);
+    }
+    
+    function addProposal (bytes32 _name, uint _proposalId, uint _endDate) public returns(uint) {
+        require(!mProposalToIndex[_proposalId].isUnique, "Proposal already added!");
+        require(_endDate >= now, "End date of proposal post me a date in the future");
+        uint index = aProposals.push(Proposal( _proposalId, now, _endDate, _name, false));
+        mProposalToIndex[_proposalId] = TrackIndex(index - 1, true);
+        emit NewProposal(_name, _proposalId, _endDate);
         return index - 1;
     }
     
-    function registerVoter(address _voter, bytes memory _idHash) public returns (uint) {
+    function addPosition (bytes32 _title, uint _proposalId,  uint _positionId, uint8 _maxCandidate) public onlyInitiator() returns(uint positionId) {
+        require(mProposalToIndex[_proposalId].isUnique, "Positions can only be added to existing prproposals!");
+        uint index = mPosition[_proposalId].push(Position(_proposalId, _positionId, _maxCandidate, _title));
+        mPositionToIndex[_positionId] = TrackIndex(index - 1, true);
+        emit NewPosition(_proposalId, _positionId, _title);
+        return index - 1;
+    }
+    
+    function addCandidate (address _candidateAddr, bytes32 _name, uint _positionId, uint _proposal, uint _candidateId) public onlyInitiator() returns(uint) {
+        TrackIndex memory _IDProposal = mProposalToIndex[_proposal];
+        TrackIndex memory _IDPosition = mPositionToIndex[_positionId];
+        TrackIndex memory _IDCandidate = mCandidateToIndex[_candidateId];
+        
+        require(!_IDCandidate.isUnique, "Candidate has been added already!");
+        require(_IDProposal.isUnique , "Candidate can only be added to an existing proposal");
+        require(!aProposals[_IDProposal.index].isActive && aProposals[_IDProposal.index].endDate > now , "Candidate cannot be added to an active or ended proposal");
+        require(_IDPosition.isUnique , "Candidate can only be added to an existing position");
+        require(mPosition[_proposal][_IDPosition.index].maxCandidate >= mCandidate[_proposal][_positionId].length, "Position maximum candidate exceeded!");
+        
+        uint index = mCandidate[_proposal][_positionId].push(Candidate(_candidateId, _positionId, _proposal, false, true, _candidateAddr, _name));
+        mCandidateToIndex[_candidateId] = TrackIndex(index - 1, true);
+        emit NewCandidate(_proposal, _positionId, _candidateId, _name);
+        return index - 1;
+    }
+    
+    function registerVoter(address _voter, uint _IDVoter) public returns (uint) {
         if (aVoters.length > 0) {
             require(mVoterToIndex[_voter] != 0, "Voter already added!");
         }
-        uint index = aVoters.push(Voter(_idHash, true));
+        uint index = aVoters.push(Voter(_IDVoter, true, _voter));
         mVoterToIndex[_voter] = index - 1;
-        emit NewVoter(_voter, _idHash);
+        emit NewVoter(_voter, _IDVoter);
         return index - 1;
     }
 
-    function VerifyVoter(bytes32 _proposal, address _voter) public onlyInitiator(_proposal) returns (bool){
-        uint _voterIndex =  mVoterToIndex[_voter];
+    function VerifyVoter(uint _proposal, uint _positionId, uint _voterId, address _voterAddr) public onlyInitiator() returns (bool){
+        uint _voterIndex =  mVoterToIndex[_voterAddr];
         require(aVoters[_voterIndex].isUnique, "Voter not found! Voter has to be added first");
-        uint[] memory _votablePosition;
-        uint index = mProposalVoters[_proposal].push(Eligibility( true, false, _voter,_votablePosition));
-        mEligibilityToIndex[_voter] = index - 1;
-        emit Verified(_voter, _proposal);
+        uint index = mProposalVoters[_proposal].push(EligibleVoter( true, false,_positionId));
+        mEligibilityToIndex[_voterIndex] = index - 1;
+        emit Verified(_voterId, _proposal, _positionId);
         return true;
     }
     
-    function addVotablePosition (bytes32 _proposal, address _voter, bytes32 _position) public onlyInitiator(_proposal) returns (bool) {
-        uint _eligibleIndex = mEligibilityToIndex[_voter];
-        uint _positionIndex =  mPositionToIndex[_position];
-        require(mProposalVoters[_proposal][_eligibleIndex].isVerified, "Voter must first be Verifiedt");
-        mProposalVoters[_proposal][_eligibleIndex].votablePositions.push(_positionIndex);
+    function accreditCandidate(uint _candidateId, uint _positionId, uint _proposalId) public onlyInitiator() returns (bool){
+        TrackIndex memory candidateIndex = mCandidateToIndex[_candidateId];
+        mCandidate[_proposalId][_positionId][candidateIndex.index].isAccredited = true;
+        emit Accredited(_candidateId, _proposalId, _positionId);
         return true;
     }
     
-    function accreditCandidate(address _candidateAddr, bytes32 _position, bytes32 _proposal) public onlyInitiator(_proposal) returns (bool){
-        uint index = mCandidateToIndex[_candidateAddr];
-        mPositionToCanditate[_position][index].isAccredited = true;
-        emit Accredited(_candidateAddr, _position);
-        return true;
-    }
-    
-    function initiateVoting(bytes32 _proposal) public onlyInitiator(_proposal) returns (bool){
-        uint _porposalId = mProposalToIndex[_proposal];
-        aProposals[_porposalId].isActive = true;
+    function initiateVoting(uint _proposal) public onlyInitiator() returns (bool){
+        TrackIndex memory _porposalId = mProposalToIndex[_proposal];
+        aProposals[_porposalId.index].isActive = true;
         emit ProposalActive(_proposal);
         return true;
     }
 
     /// Give a single vote to proposal $(toProposal).
-    function vote(bytes32 _proposal, bytes32 _position, address _candidate) public {
-        uint _proposalIndex = mProposalToIndex[_proposal];
-        if(aProposals[_proposalIndex].endDate >= now) {
-            aProposals[_proposalIndex].isActive = false;
+    function vote(uint _proposalId, uint _positionId, uint _candidateId, uint _voterId) public {
+        TrackIndex memory _proposalIndex = mProposalToIndex[_proposalId];
+        if(aProposals[_proposalIndex.index].endDate <= now) {
+            aProposals[_proposalIndex.index].isActive = false;
         }
         
-        require(aProposals[_proposalIndex].endDate > now, "Voting has ended for this proposal!");
-        require(aProposals[_proposalIndex].isActive, "This proposal is not active for votes!");
+        require(aProposals[_proposalIndex.index].endDate > now, "Voting has ended for this proposal!");
+        require(aProposals[_proposalIndex.index].isActive, "This proposal is not active for votes!");
         
-        uint candidateIndex = mCandidateToIndex[_candidate];
-        uint positionIndex = mPositionToIndex[_position];
-        uint eligibleIndex = mEligibilityToIndex[msg.sender];
+        TrackIndex memory candidateIndex = mCandidateToIndex[_candidateId];
+        uint _voterIndex =  mVoterToIndex[msg.sender];
+        uint eligibleIndex = mEligibilityToIndex[_voterIndex];
         
-        require(mPositionToCanditate[_position][candidateIndex].isAccredited, "The candidate you want to vote for is not accredited!");
-        require(mProposalVoters[_proposal][eligibleIndex].isVerified, "You are not eligible to vote on this proposal!");
-        require(mProposalToPositions[_proposal][positionIndex].voted[msg.sender] == address(0), "You have voted in this position already");
-        
-        mPositionToCanditate[_position][candidateIndex].voteCount++;
-        mProposalToPositions[_proposal][positionIndex].voted[msg.sender] = _candidate;
-        emit Voted(msg.sender, _proposal, _position, _candidate);
+        require(mCandidate[_proposalId][_positionId][candidateIndex.index].isAccredited, "The candidate you want to vote for is not accredited!");
+        require(mProposalVoters[_proposalId][eligibleIndex].isVerified, "You are not eligible to vote on this proposal!");
+        require(!votedCandidate[_proposalId][_positionId][_candidateId][msg.sender], "You have voted in this position already");
+        require(!votedPosition[_proposalId][_positionId][msg.sender], "You have voted in this position already");
+
+        allVotes.push(Vote(_proposalId,_positionId,_candidateId,_voterId));
+        votedCandidate[_proposalId][_positionId][_candidateId][msg.sender] = true;
+        votedPosition[_proposalId][_positionId][msg.sender] = true;
+        mProposalVoters[_proposalId][eligibleIndex].isVoted = true;
+        emit Voted(_proposalId, _positionId, _candidateId, _voterId, msg.sender);
         
     }
 }
