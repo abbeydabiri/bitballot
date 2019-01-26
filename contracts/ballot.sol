@@ -187,7 +187,7 @@ contract Ballot {
     /// Give a single vote to proposal $(toProposal).
     function vote(uint _proposalId, uint _positionId, uint _candidateId, uint _voterId) public {
         TrackIndex memory _proposalIndex = mProposalToIndex[_proposalId];
-        if(aProposals[_proposalIndex.index].endDate >= now) {
+        if(aProposals[_proposalIndex.index].endDate <= now) {
             aProposals[_proposalIndex.index].isActive = false;
         }
         
@@ -206,6 +206,7 @@ contract Ballot {
         allVotes.push(Vote(_proposalId,_positionId,_candidateId,_voterId));
         votedCandidate[_proposalId][_positionId][_candidateId][msg.sender] = true;
         votedPosition[_proposalId][_positionId][msg.sender] = true;
+        mProposalVoters[_proposalId][eligibleIndex].isVoted = true;
         emit Voted(_proposalId, _positionId, _candidateId, _voterId, msg.sender);
         
     }
