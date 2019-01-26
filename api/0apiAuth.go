@@ -84,6 +84,7 @@ func apiAuthLogin(httpRes http.ResponseWriter, httpReq *http.Request) {
 				jwtClaims["Username"] = user.Username
 				jwtClaims["Email"] = user.Email
 				jwtClaims["Mobile"] = user.Mobile
+				jwtClaims["IsAdmin"] = true
 				statusBody["Redirect"] = "/admin"
 
 				if statusBody["Redirect"] != nil {

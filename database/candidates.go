@@ -14,7 +14,7 @@ import (
 //before being posted to blockchain
 type Candidates struct {
 	Fields
-	ProfileID, PositionID, ProposalID uint64
+	CandidateID, PositionID, ProposalID uint64
 
 	VoteCount int
 }
@@ -83,7 +83,7 @@ func (table *Candidates) Search(tableMap map[string]interface{}, searchParams *S
 		viewSearch := fmt.Sprintf("from %s where ", tablename)
 
 		viewJoin := " from " + tablename
-		viewJoin += " left join profiles on candidates.profileid = profiles.id  "
+		viewJoin += " left join profiles on candidates.candidateid = profiles.id  "
 		viewJoin += " left join positions on candidates.positionid = positions.id  "
 		viewJoin += " left join proposals on candidates.proposalid = proposals.id where "
 
@@ -96,7 +96,7 @@ func (table *Candidates) Search(tableMap map[string]interface{}, searchParams *S
 
 		searchParams.Text = "%" + searchParams.Text + "%"
 		sqlParams = append(sqlParams, searchParams.Text)
-		sqlQuery += fmt.Sprintf("%v.%v like $%v order by id desc ", tablename, searchParams.Field, len(sqlParams))
+		sqlQuery += fmt.Sprintf("%v.%v like $%v order by proposals.title, positions.title, profiles.lastname, profiles.firstname ", tablename, searchParams.Field, len(sqlParams))
 
 		sqlParams = append(sqlParams, searchParams.Limit)
 		sqlQuery += fmt.Sprintf("limit $%v ", len(sqlParams))

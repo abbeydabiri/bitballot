@@ -32,6 +32,10 @@ type Config struct {
 		Public  []byte
 	}
 
+	Ethereum struct {
+		Network, Mnemonic string
+	}
+	
 	Postgres *sqlx.DB
 	dbConfig map[string]string
 }
@@ -88,6 +92,14 @@ func Init(yamlConfig []byte) {
 			return
 		}
 	}
+
+	//Ethereum Keys
+	ethereumMap := viper.GetStringMapString("ethereum")
+	if ethereumMap != nil {
+		config.Ethereum.Network = ethereumMap["network"]
+		config.Ethereum.Mnemonic = strings.TrimSpace(ethereumMap["mnemonic"])
+	}
+	//Ethereum Keys
 
 	//SQL Connection for POSTGRESQL
 	if config.dbConfig = viper.GetStringMapString("dbconfig"); len(config.dbConfig) == 5 {

@@ -32,9 +32,9 @@ func apiVotersGet(httpRes http.ResponseWriter, httpReq *http.Request) {
 		config.Get().Postgres.Get(&Position, "select title from positions where id = $1 limit 1", table.PositionID)
 		tableMap["Position"] = Position
 
-		Profile := ""
-		config.Get().Postgres.Get(&Profile, "select fullname from profiles where id = $1 limit 1", table.ProfileID)
-		tableMap["Profile"] = Profile
+		Voter := ""
+		config.Get().Postgres.Get(&Voter, "select fullname from profiles where id = $1 limit 1", table.VoterID)
+		tableMap["Voter"] = Voter
 		
 		message.Body = tableMap
 	}
@@ -47,13 +47,6 @@ func apiVotersPost(httpRes http.ResponseWriter, httpReq *http.Request) {
 		table := database.Voters{}
 		table.FillStruct(tableMap)
 
-		if table.Title == "" {
-			message.Message += "Title is required \n"
-			message.Code = http.StatusInternalServerError
-			json.NewEncoder(httpRes).Encode(message)
-			return
-		}
-
 		if table.Workflow == "" {
 			message.Message += "Status is required \n"
 			message.Code = http.StatusInternalServerError
@@ -61,8 +54,8 @@ func apiVotersPost(httpRes http.ResponseWriter, httpReq *http.Request) {
 			return
 		}
 
-		if table.ProposalID == uint64(0) {
-			message.Message += "Proposal is required \n"
+		if table.VoterID == uint64(0) {
+			message.Message += "Voter is required \n"
 			message.Code = http.StatusInternalServerError
 			json.NewEncoder(httpRes).Encode(message)
 			return
@@ -75,8 +68,24 @@ func apiVotersPost(httpRes http.ResponseWriter, httpReq *http.Request) {
 			return
 		}
 
-		if table.ProfileID == uint64(0) {
-			message.Message += "Profile is required \n"
+		ProposalID := uint64(0)
+		config.Get().Postgres.Get(&ProposalID, "select proposalid from positions where id = $1 limit 1", table.PositionID)
+		table.ProposalID = ProposalID
+
+		if table.ProposalID == uint64(0) {
+			message.Message += "Proposal is required \n"
+			message.Code = http.StatusInternalServerError
+			json.NewEncoder(httpRes).Encode(message)
+			return
+		}
+
+		countID := 0
+		sqlCount := "select count(id) from voters where voterid = $1 and positionid = $2 and proposalid = $3"
+		config.Get().Postgres.Get(&countID, sqlCount, table.VoterID, table.PositionID, table.ProposalID)
+
+
+		if countID > 0 {
+			message.Message += "Voter already registered!! \n"
 			message.Code = http.StatusInternalServerError
 			json.NewEncoder(httpRes).Encode(message)
 			return
@@ -114,9 +123,9 @@ func apiVotersSearch(httpRes http.ResponseWriter, httpReq *http.Request) {
 			config.Get().Postgres.Get(&Position, "select title from positions where id = $1 limit 1", result.PositionID)
 			tableMap["Position"] = Position
 
-			Profile := ""
-			config.Get().Postgres.Get(&Profile, "select fullname from profiles where id = $1 limit 1", result.ProfileID)
-			tableMap["Profile"] = Profile
+			Voter := ""
+			config.Get().Postgres.Get(&Voter, "select fullname from profiles where id = $1 limit 1", result.VoterID)
+			tableMap["Voter"] = Voter
 
 			searchList = append(searchList, tableMap)
 		}

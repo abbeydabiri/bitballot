@@ -65,10 +65,11 @@ func apiProfilesPost(httpRes http.ResponseWriter, httpReq *http.Request) {
 		}
 
 		if table.Workflow == "" {
-			message.Message += "Workflow is required \n"
-			message.Code = http.StatusInternalServerError
-			json.NewEncoder(httpRes).Encode(message)
-			return
+			table.Workflow = "draft"
+			// message.Message += "Workflow is required \n"
+			// message.Code = http.StatusInternalServerError
+			// json.NewEncoder(httpRes).Encode(message)
+			// return
 		}
 
 		if table.ID == 0 {

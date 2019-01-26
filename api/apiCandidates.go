@@ -32,9 +32,9 @@ func apiCandidatesGet(httpRes http.ResponseWriter, httpReq *http.Request) {
 		config.Get().Postgres.Get(&Position, "select title from positions where id = $1 limit 1", table.PositionID)
 		tableMap["Position"] = Position
 
-		Profile := ""
-		config.Get().Postgres.Get(&Profile, "select fullname from profiles where id = $1 limit 1", table.ProfileID)
-		tableMap["Profile"] = Profile
+		Candidate := ""
+		config.Get().Postgres.Get(&Candidate, "select fullname from profiles where id = $1 limit 1", table.CandidateID)
+		tableMap["Candidate"] = Candidate
 		
 		message.Body = tableMap
 	}
@@ -47,13 +47,6 @@ func apiCandidatesPost(httpRes http.ResponseWriter, httpReq *http.Request) {
 		table := database.Candidates{}
 		table.FillStruct(tableMap)
 
-		if table.Title == "" {
-			message.Message += "Title is required \n"
-			message.Code = http.StatusInternalServerError
-			json.NewEncoder(httpRes).Encode(message)
-			return
-		}
-
 		if table.Workflow == "" {
 			message.Message += "Status is required \n"
 			message.Code = http.StatusInternalServerError
@@ -61,8 +54,8 @@ func apiCandidatesPost(httpRes http.ResponseWriter, httpReq *http.Request) {
 			return
 		}
 
-		if table.ProposalID == uint64(0) {
-			message.Message += "Proposal is required \n"
+		if table.CandidateID == uint64(0) {
+			message.Message += "Candidate is required \n"
 			message.Code = http.StatusInternalServerError
 			json.NewEncoder(httpRes).Encode(message)
 			return
@@ -75,8 +68,23 @@ func apiCandidatesPost(httpRes http.ResponseWriter, httpReq *http.Request) {
 			return
 		}
 
-		if table.ProfileID == uint64(0) {
-			message.Message += "Profile is required \n"
+		ProposalID := uint64(0)
+		config.Get().Postgres.Get(&ProposalID, "select proposalid from positions where id = $1 limit 1", table.PositionID)
+		table.ProposalID = ProposalID
+
+		if table.ProposalID == uint64(0) {
+			message.Message += "Proposal is required \n"
+			message.Code = http.StatusInternalServerError
+			json.NewEncoder(httpRes).Encode(message)
+			return
+		}
+
+		countID := 0
+		sqlCount := "select count(id) from candidates where candidateid = $1 and positionid = $2 and proposalid = $3"
+		config.Get().Postgres.Get(&countID, sqlCount, table.CandidateID, table.PositionID, table.ProposalID)
+
+		if countID > 0 {
+			message.Message += "Candidate already registered!! \n"
 			message.Code = http.StatusInternalServerError
 			json.NewEncoder(httpRes).Encode(message)
 			return
@@ -114,9 +122,9 @@ func apiCandidatesSearch(httpRes http.ResponseWriter, httpReq *http.Request) {
 			config.Get().Postgres.Get(&Position, "select title from positions where id = $1 limit 1", result.PositionID)
 			tableMap["Position"] = Position
 
-			Profile := ""
-			config.Get().Postgres.Get(&Profile, "select fullname from profiles where id = $1 limit 1", result.ProfileID)
-			tableMap["Profile"] = Profile
+			Candidate := ""
+			config.Get().Postgres.Get(&Candidate, "select fullname from profiles where id = $1 limit 1", result.CandidateID)
+			tableMap["Candidate"] = Candidate
 
 			searchList = append(searchList, tableMap)
 		}

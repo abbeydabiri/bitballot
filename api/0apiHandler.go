@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+
 	// "bytes"
 	// "html/template"
 	// "log"
@@ -19,6 +20,7 @@ import (
 	"bitballot/config"
 	"bitballot/database"
 	"bitballot/utils"
+	
 )
 
 const (
@@ -128,8 +130,8 @@ func apiHandler(middlewares alice.Chain, router *Router) {
 	apiHandlerUsers(middlewares, router)
 	apiHandlerVoters(middlewares, router)
 	apiHandlerVotes(middlewares, router)
-
-
+	
+	apiHandlerEthreum(middlewares, router)
 }
 
 func cut(name string) string {

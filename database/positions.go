@@ -59,8 +59,8 @@ func (table *Positions) GetByID(tableMap map[string]interface{}, searchParams *S
 
 func (table *Positions) Search(tableMap map[string]interface{}, searchParams *SearchParams) (list []Positions) {
 
-	if Proposal := searchParams.Filter["Proposal"]; Proposal != "" {
-		delete(searchParams.Filter, "Proposal")
+	if Proposal := searchParams.Filter["proposal"]; Proposal != "" {
+		delete(searchParams.Filter, "proposal")
 		searchParams.Filter["Proposals.title"] = Proposal
 	}
 

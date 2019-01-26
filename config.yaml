@@ -8,7 +8,9 @@ adminurl: admin.valued.ng
 encryption_keys:
   public: public.pem
   private: private.pem
-
+ethereum:
+  network: https://rinkeby.infura.io/wvxLGQSZBjP3Ak7iqt8J
+  mnemonic: alcohol begin science tuition clock twelve creek damp betray welcome vessel bounce
 dbconfig:
   hostname: localhost
   database: bitballot

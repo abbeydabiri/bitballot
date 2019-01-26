@@ -23,7 +23,8 @@ type Fields struct {
 
 	Createdby, Updatedby   uint64
 	Createdate, Updatedate time.Time
-
+	
+	Code string
 	Title    string `sql:"index"`
 	Workflow string `sql:"index"`
 }
