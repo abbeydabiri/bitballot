@@ -99,12 +99,13 @@ contract Ballot {
         return mProposalVoters[_proposal].length;
     }
     
-    function positionsCount(uint _proposal, uint _positionId) public view returns(uint) {
-        return mCandidate[_proposal][_positionId].length;
+    function positionsCount(uint _proposal) public view returns(uint) {
+        return mPosition[_proposal].length;
     }
     
-    function candidatesCount(uint _proposal) public view returns(uint) {
-        return mPosition[_proposal].length;
+    function candidatesCount(uint _proposal, uint _position) public view returns(uint) {
+        return mCandidate[_proposal][_position].length;
+        
     }
     
     function getEligibleVoters(uint _proposal, address _voterAddr) public view returns(uint voterId, address voterAddr, uint positionId, bool isVerified, bool isVoted) {
@@ -128,6 +129,7 @@ contract Ballot {
     
     function addPosition (bytes32 _title, uint _proposalId,  uint _positionId, uint8 _maxCandidate) public onlyInitiator() returns(uint positionId) {
         require(mProposalToIndex[_proposalId].isUnique, "Positions can only be added to existing prproposals!");
+        require(!aProposals[mProposalToIndex[_proposalId].index].isActive && aProposals[mProposalToIndex[_proposalId].index].endDate >= now, "New positions cannot be added to an active or ended proposal");
         uint index = mPosition[_proposalId].push(Position(_proposalId, _positionId, _maxCandidate, _title));
         mPositionToIndex[_positionId] = TrackIndex(index - 1, true);
         emit NewPosition(_proposalId, _positionId, _title);
@@ -141,7 +143,7 @@ contract Ballot {
         
         require(!_IDCandidate.isUnique, "Candidate has been added already!");
         require(_IDProposal.isUnique , "Candidate can only be added to an existing proposal");
-        require(!aProposals[_IDProposal.index].isActive && aProposals[_IDProposal.index].endDate > now , "Candidate cannot be added to an active or ended proposal");
+        require(!aProposals[_IDProposal.index].isActive && aProposals[_IDProposal.index].endDate >= now , "Candidate cannot be added to an active or ended proposal");
         require(_IDPosition.isUnique , "Candidate can only be added to an existing position");
         require(mPosition[_proposal][_IDPosition.index].maxCandidate >= mCandidate[_proposal][_positionId].length, "Position maximum candidate exceeded!");
         
@@ -162,6 +164,7 @@ contract Ballot {
     }
 
     function VerifyVoter(uint _proposal, uint _positionId, uint _voterId, address _voterAddr) public onlyInitiator() returns (bool){
+        require(!aProposals[mProposalToIndex[_proposal].index].isActive && aProposals[mProposalToIndex[_proposal].index].endDate >= now, "Voters cannot be verified for an active or ended proposal");
         uint _voterIndex =  mVoterToIndex[_voterAddr];
         require(aVoters[_voterIndex].isUnique, "Voter not found! Voter has to be added first");
         uint index = mProposalVoters[_proposal].push(EligibleVoter( true, false,_positionId));
@@ -171,6 +174,8 @@ contract Ballot {
     }
     
     function accreditCandidate(uint _candidateId, uint _positionId, uint _proposalId) public onlyInitiator() returns (bool){
+        require(!aProposals[mProposalToIndex[_proposalId].index].isActive && aProposals[mProposalToIndex[_proposalId].index].endDate >= now, "Candidates cannot be accredited for an active or ended proposal");
+        
         TrackIndex memory candidateIndex = mCandidateToIndex[_candidateId];
         mCandidate[_proposalId][_positionId][candidateIndex.index].isAccredited = true;
         emit Accredited(_candidateId, _proposalId, _positionId);
