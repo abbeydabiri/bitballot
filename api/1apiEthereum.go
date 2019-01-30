@@ -7,10 +7,16 @@ import (
 	"io/ioutil"
 	"net/http"
 	"encoding/json"
+	"log"
 
 	"github.com/justinas/alice"
+	"github.com/ethereum/go-ethereum/common"
 	
 	"bitballot/blockchain"
+	"bitballot/database"
+	"bitballot/config"
+	"bitballot/contracts"
+
 )
 
 //apiHandlerEthreum ...
@@ -21,24 +27,43 @@ func apiHandlerEthreum(middlewares alice.Chain, router *Router) {
 	// router.Post("/web3", middlewares.ThenFunc(apiEthereum))
 	router.Get("/api/eth/balance", middlewares.ThenFunc(apiEthereumBalance))
 	router.Post("/api/eth/proposal", middlewares.ThenFunc(apiEthereumProposal))
-	router.Post("/api/eth/position", middlewares.ThenFunc(apiEthereumPosition))
-	router.Post("/api/eth/candidate", middlewares.ThenFunc(apiEthereumCandidate))
-	router.Post("/api/eth/voters", middlewares.ThenFunc(apiEthereumVoters))
+	// router.Post("/api/eth/position", middlewares.ThenFunc(apiEthereumPosition))
+	// router.Post("/api/eth/candidate", middlewares.ThenFunc(apiEthereumCandidate))
+	// router.Post("/api/eth/voters", middlewares.ThenFunc(apiEthereumVoters))
 }
 
 func apiEthereumProposal(httpRes http.ResponseWriter, httpReq *http.Request)  {
 	tableMap, message := apiSecurePost(httpRes, httpReq)
 	if message.Code == http.StatusOK {
 
+		
+		formSearch := new(database.SearchParams)
+		formSearch.ID = tableMap["id"].(uint64)
+		
 		table := database.Proposals{}
-		table.GetByID(table.ToMap(), tableMap["id"])
+		table.GetByID(table.ToMap(), formSearch)
+
+
+
+		smartcontractAddress := common.HexToAddress(config.Get().Ethereum.Smartcontract)
+		instance, err := contracts.NewContracts(smartcontractAddress, blockchain.Client )
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		fmt.Println("contract is loaded")
+    	_ = instance
+
+
 
 		message.Body = nil
-		message.Message = Sent to Blockchain
+		message.Message = "Sent to Blockchain"
 	}
 	json.NewEncoder(httpRes).Encode(message)
 }
 
+
+/*
 func apiEthereumPosition(httpRes http.ResponseWriter, httpReq *http.Request)  {
 	tableMap, message := apiSecurePost(httpRes, httpReq)
 	if message.Code == http.StatusOK {
@@ -47,7 +72,7 @@ func apiEthereumPosition(httpRes http.ResponseWriter, httpReq *http.Request)  {
 		table.GetByID(table.ToMap(), tableMap["id"])
 
 		message.Body = nil
-		message.Message = Sent to Blockchain
+		message.Message = "Sent to Blockchain"
 	}
 	json.NewEncoder(httpRes).Encode(message)
 }
@@ -60,7 +85,7 @@ func apiEthereumCandidate(httpRes http.ResponseWriter, httpReq *http.Request)  {
 		table.GetByID(table.ToMap(), tableMap["id"])
 
 		message.Body = nil
-		message.Message = Sent to Blockchain
+		message.Message = "Sent to Blockchain"
 	}
 	json.NewEncoder(httpRes).Encode(message)
 }
@@ -73,16 +98,18 @@ func apiEthereumVoters(httpRes http.ResponseWriter, httpReq *http.Request)  {
 		table.GetByID(table.ToMap(), tableMap["id"])
 
 		message.Body = nil
-		message.Message = Sent to Blockchain
+		message.Message = "Sent to Blockchain"
 	}
 	json.NewEncoder(httpRes).Encode(message)
 }
+*/
+
 
 func apiEthereumBalance(httpRes http.ResponseWriter, httpReq *http.Request) {
 	message := apiSecure(httpRes, httpReq)
 	if message.Code == http.StatusOK {
 		
-		_, fromAddress := blockchain.EthGenerateKey(blockchain.ETHAddress)
+		_, fromAddress := blockchain.EthGenerateKey(blockchain.ETHAddressNum)
 		balance, _ := blockchain.ETHAccountBalFloat(fromAddress.Hex(), 0)
 	
 		tableMap := map[string]interface{}{

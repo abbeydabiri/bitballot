@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"time"
 	
-	// "regexp"
+	"regexp"
 	// "strings"
 
 	jwt "github.com/dgrijalva/jwt-go"
@@ -22,8 +22,10 @@ import (
 func apiHandlerAuth(middlewares alice.Chain, router *Router) {
 	router.Post("/api/login", middlewares.ThenFunc(apiAuthLogin))
 	// router.Post("/api/forgot", middlewares.ThenFunc(apiAuthForgot))
-	// router.Post("/api/signup", middlewares.ThenFunc(apiAuthSignup))
 	// router.Post("/api/signup-newsletter", middlewares.ThenFunc(apiSignupNewsletter))
+
+	router.Post("/api/register", middlewares.ThenFunc(apiAuthRegister))
+	router.Post("/api/checkaddress", middlewares.ThenFunc(apiAuthCheckAddress))
 }
 
 func apiAuthLogin(httpRes http.ResponseWriter, httpReq *http.Request) {
@@ -117,139 +119,124 @@ func apiAuthLogin(httpRes http.ResponseWriter, httpReq *http.Request) {
 }
 
 
-/*
-func apiAuthSignup(httpRes http.ResponseWriter, httpReq *http.Request) {
 
+func apiAuthRegister(httpRes http.ResponseWriter, httpReq *http.Request) {
 	httpRes.Header().Set("Content-Type", "application/json")
 
-	statusMessage := ""
-	statusBody := make(map[string]interface{})
-	statusCode := http.StatusInternalServerError
+	message := new(Message)
+	message.Message = ""
+	message.Code = http.StatusInternalServerError
 
 	var formStruct struct {
-		Username, Password,
-		Email, Mobile,
-
-		Fullname, Title,
 		Firstname, Lastname,
-		Othername, Street, City,
-		State, Country, Occupation,
-		Image, Referrer string
+		Email, Mobile,
+		Code string
 	}
 
-	err := json.NewDecoder(httpReq.Body).Decode(&formStruct)
-	if err != nil {
-		statusMessage = "Error Decoding Form Values " + err.Error()
-	} else {
-		usersList := []database.Users{}
-
-		sqlQuery := "select id from users where email = ?"
-		config.Get().Postgres.Select(&usersList, sqlQuery, formStruct.Email)
-
-		if len(usersList) > 0 {
-			statusMessage = fmt.Sprintf("Sorry this Email [%s] already exists", formStruct.Email)
-		} else {
-
-			sqlQuery = "select id from users where username = ?"
-			config.Get().Postgres.Select(&usersList, sqlQuery, formStruct.Username)
-
-			if len(usersList) > 0 {
-				statusMessage = fmt.Sprintf("Sorry this Username [%s] already exists", formStruct.Username)
-			} else {
-
-				if formStruct.Username == "" {
-					statusMessage += "Username " + IsRequired
-				}
-
-				if formStruct.Password == "" {
-					statusMessage += "Password " + IsRequired
-				}
-
-				if formStruct.Firstname == "" {
-					statusMessage += "Firstname " + IsRequired
-				}
-
-				if formStruct.Lastname == "" {
-					statusMessage += "Lastname " + IsRequired
-				}
-
-				emailRE := regexp.MustCompile(`^[a-zA-Z0-9][-_.a-zA-Z0-9]*@[a-zA-Z0-9.-]+\.[a-zA-Z0-9.-]+?$`)
-				if emailRE.MatchString(formStruct.Email) {
-					statusMessage += "Email " + IsRequired
-				}
-
-				if strings.HasSuffix(statusMessage, "\n") {
-					statusMessage = statusMessage[:len(statusMessage)-2]
-				}
-
-				//All Seems Clear, Create New User Now Now
-				if statusMessage == "" {
-					profile := database.Profiles{}
-					profile.Create(
-						map[string]interface{}{
-							"Workflow":   "enabled",
-							"Title":      formStruct.Title,
-							"Fullname":   formStruct.Fullname,
-							"Firstname":  formStruct.Firstname,
-							"Lastname":   formStruct.Lastname,
-							"Othername":  formStruct.Othername,
-							"Email":      formStruct.Email,
-							"Mobile":     formStruct.Mobile,
-							"City":       formStruct.City,
-							"State":      formStruct.State,
-							"Street":     formStruct.Street,
-							"Country":    formStruct.Country,
-							"Referrer":   formStruct.Referrer,
-							"Occupation": formStruct.Occupation,
-						})
-
-					user := database.Users{}
-					passwordHash, _ := bcrypt.GenerateFromPassword(
-						[]byte(formStruct.Password), bcrypt.DefaultCost)
-					user.Create(
-						map[string]interface{}{
-							"FailedMax": 5,
-							"IsCustomer":  true,
-							"ProfileID": profile.ID,
-							"Email":     formStruct.Email,
-							"Mobile":    formStruct.Mobile,
-							"Username":  formStruct.Username,
-							"Code":      formStruct.Username,
-							"Title":     fmt.Sprintf("%v - %v", formStruct.Username, formStruct.Email),
-							"Workflow":  "pending",
-							"Password":  base64.StdEncoding.EncodeToString(passwordHash),
-						})
-
-					statusCode = http.StatusOK
-					statusMessage = "Please check your email for details"
-					// apiClientWelcomeMail(profile)
-				}
-
-			}
-		}
+	if err := json.NewDecoder(httpReq.Body).Decode(&formStruct); err != nil {
+		message.Message += "Error Decoding Form Values " + err.Error()
+		json.NewEncoder(httpRes).Encode(message)
+		return
 	}
 
-	tableHits := database.Hits{}
-	tableHits.Code = formStruct.Username
-	tableHits.Title = fmt.Sprintf("New Client Signup: [%v] - %s", formStruct.Username, statusMessage)
+	if formStruct.Code == "" {
+		message.Message += "Address " + IsRequired
+	}
 
-	tableHits.UserAgent = httpReq.UserAgent()
-	tableHits.IPAddress = httpReq.RemoteAddr
-	tableHits.Workflow = "enabled"
-	tableHits.Description = fmt.Sprintf("Fields: %+v", formStruct)
-	tableHits.Create(tableHits.ToMap())
+	if formStruct.Firstname == "" {
+		message.Message += "Firstname " + IsRequired
+	}
 
-	//
+	if formStruct.Lastname == "" {
+		message.Message += "Lastname " + IsRequired
+	}
 
-	json.NewEncoder(httpRes).Encode(Message{
-		Code:    statusCode,
-		Message: statusMessage,
-		Body:    statusBody,
-	})
-	// //Send E-Mail
+	if formStruct.Mobile == "" {
+		message.Message += "Mobile " + IsRequired
+	}
+
+	emailRE := regexp.MustCompile(`^[a-zA-Z0-9][-_.a-zA-Z0-9]*@[a-zA-Z0-9.-]+\.[a-zA-Z0-9.-]+?$`)
+	if emailRE.MatchString(formStruct.Email) {
+		message.Message += "Email " + IsRequired
+	}
+
+
+	if message.Message != "" {
+		json.NewEncoder(httpRes).Encode(message)
+		return
+	}
+
+	nCountEmail := 0
+	sqlQueryEmail := "select count(id) from profiles where email = ?"
+	config.Get().Postgres.Select(&nCountEmail, sqlQueryEmail, formStruct.Email)
+	if  nCountEmail > 0 {
+		message.Message += "Email is already taken"
+		json.NewEncoder(httpRes).Encode(message)
+		return
+	}
+
+	nCountMobile := 0
+	sqlQueryMobile := "select count(id) from profiles where email = ?"
+	config.Get().Postgres.Select(&nCountMobile, sqlQueryMobile, formStruct.Mobile)
+	if  nCountMobile > 0 {
+		message.Message += "Mobile is already taken"
+		json.NewEncoder(httpRes).Encode(message)
+		return
+	}
+
+	profile := database.Profiles{}
+	profile.Create(
+		map[string]interface{}{
+			"Workflow":   "pending",
+
+			"Code":       formStruct.Code,
+			"Fullname":   formStruct.Firstname+" "+formStruct.Lastname,
+			"Firstname":  formStruct.Firstname,
+			"Lastname":   formStruct.Lastname,
+			
+			"Email":      formStruct.Email,
+			"Mobile":     formStruct.Mobile,
+		})
+
+	message.Code = http.StatusOK
+	message.Message = "You have been registered"
+	json.NewEncoder(httpRes).Encode(message)
 }
-*/
 
+func apiAuthCheckAddress(httpRes http.ResponseWriter, httpReq *http.Request) {
+	httpRes.Header().Set("Content-Type", "application/json")
+
+	message := new(Message)
+	message.Message = ""
+	message.Code = http.StatusInternalServerError
+
+	var formStruct struct {
+		Code string
+	}
+
+	if err := json.NewDecoder(httpReq.Body).Decode(&formStruct); err != nil {
+		message.Message += "Error Decoding Form Values " + err.Error()
+		json.NewEncoder(httpRes).Encode(message)
+		return
+	}
+
+	if formStruct.Code == "" {
+		message.Message += "Address " + IsRequired
+		json.NewEncoder(httpRes).Encode(message)
+	}
+
+	
+	nCount := 0
+	sqlQuery := "select count(id) from profiles where code = ?"
+	config.Get().Postgres.Select(&nCount, sqlQuery, formStruct.Code)
+	registered := map[string]bool{"registered":false}
+	if  nCount > 0 {
+		registered["registered"] = true
+	}
+	message.Body = registered
+	message.Code = http.StatusOK
+	json.NewEncoder(httpRes).Encode(message)
+}
 
 /*
 func apiAuthForgot(httpRes http.ResponseWriter, httpReq *http.Request) {

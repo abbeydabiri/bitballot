@@ -33,7 +33,8 @@ type Config struct {
 	}
 
 	Ethereum struct {
-		Network, Mnemonic string
+		Network, Mnemonic,
+		Smartcontract string
 	}
 	
 	Postgres *sqlx.DB
@@ -98,6 +99,7 @@ func Init(yamlConfig []byte) {
 	if ethereumMap != nil {
 		config.Ethereum.Network = ethereumMap["network"]
 		config.Ethereum.Mnemonic = strings.TrimSpace(ethereumMap["mnemonic"])
+		config.Ethereum.Smartcontract = strings.TrimSpace(ethereumMap["smartcontract"])
 	}
 	//Ethereum Keys
 

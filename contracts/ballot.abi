@@ -1,0 +1,755 @@
+[
+	{
+		"constant": true,
+		"inputs": [
+			{
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"name": "aProposals",
+		"outputs": [
+			{
+				"name": "proposalId",
+				"type": "uint256"
+			},
+			{
+				"name": "startDate",
+				"type": "uint256"
+			},
+			{
+				"name": "endDate",
+				"type": "uint256"
+			},
+			{
+				"name": "name",
+				"type": "bytes32"
+			},
+			{
+				"name": "isActive",
+				"type": "bool"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [
+			{
+				"name": "_proposal",
+				"type": "uint256"
+			}
+		],
+		"name": "positionsCount",
+		"outputs": [
+			{
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"name": "_title",
+				"type": "bytes32"
+			},
+			{
+				"name": "_proposalId",
+				"type": "uint256"
+			},
+			{
+				"name": "_positionId",
+				"type": "uint256"
+			},
+			{
+				"name": "_maxCandidate",
+				"type": "uint8"
+			}
+		],
+		"name": "addPosition",
+		"outputs": [
+			{
+				"name": "positionId",
+				"type": "uint256"
+			}
+		],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"name": "_proposal",
+				"type": "uint256"
+			}
+		],
+		"name": "initiateVoting",
+		"outputs": [
+			{
+				"name": "",
+				"type": "bool"
+			}
+		],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [],
+		"name": "initiator",
+		"outputs": [
+			{
+				"name": "",
+				"type": "address"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"name": "_proposalId",
+				"type": "uint256"
+			},
+			{
+				"name": "_positionId",
+				"type": "uint256"
+			},
+			{
+				"name": "_candidateId",
+				"type": "uint256"
+			},
+			{
+				"name": "_voterId",
+				"type": "uint256"
+			}
+		],
+		"name": "vote",
+		"outputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [
+			{
+				"name": "_proposal",
+				"type": "uint256"
+			},
+			{
+				"name": "_voterAddr",
+				"type": "address"
+			}
+		],
+		"name": "getEligibleVoters",
+		"outputs": [
+			{
+				"name": "voterId",
+				"type": "uint256"
+			},
+			{
+				"name": "voterAddr",
+				"type": "address"
+			},
+			{
+				"name": "positionId",
+				"type": "uint256"
+			},
+			{
+				"name": "isVerified",
+				"type": "bool"
+			},
+			{
+				"name": "isVoted",
+				"type": "bool"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"name": "_candidateAddr",
+				"type": "address"
+			},
+			{
+				"name": "_name",
+				"type": "bytes32"
+			},
+			{
+				"name": "_positionId",
+				"type": "uint256"
+			},
+			{
+				"name": "_proposal",
+				"type": "uint256"
+			},
+			{
+				"name": "_candidateId",
+				"type": "uint256"
+			}
+		],
+		"name": "addCandidate",
+		"outputs": [
+			{
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [
+			{
+				"name": "_proposal",
+				"type": "uint256"
+			}
+		],
+		"name": "eligibleVotersCount",
+		"outputs": [
+			{
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [],
+		"name": "votesCount",
+		"outputs": [
+			{
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [],
+		"name": "votersCount",
+		"outputs": [
+			{
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"name": "_name",
+				"type": "bytes32"
+			},
+			{
+				"name": "_proposalId",
+				"type": "uint256"
+			},
+			{
+				"name": "_endDate",
+				"type": "uint256"
+			}
+		],
+		"name": "addProposal",
+		"outputs": [
+			{
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [
+			{
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"name": "aVoters",
+		"outputs": [
+			{
+				"name": "voterId",
+				"type": "uint256"
+			},
+			{
+				"name": "isUnique",
+				"type": "bool"
+			},
+			{
+				"name": "voterAddr",
+				"type": "address"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [
+			{
+				"name": "",
+				"type": "uint256"
+			},
+			{
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"name": "mPosition",
+		"outputs": [
+			{
+				"name": "proposalId",
+				"type": "uint256"
+			},
+			{
+				"name": "positionId",
+				"type": "uint256"
+			},
+			{
+				"name": "maxCandidate",
+				"type": "uint8"
+			},
+			{
+				"name": "title",
+				"type": "bytes32"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"name": "_proposal",
+				"type": "uint256"
+			},
+			{
+				"name": "_positionId",
+				"type": "uint256"
+			},
+			{
+				"name": "_voterId",
+				"type": "uint256"
+			},
+			{
+				"name": "_voterAddr",
+				"type": "address"
+			}
+		],
+		"name": "VerifyVoter",
+		"outputs": [
+			{
+				"name": "",
+				"type": "bool"
+			}
+		],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [
+			{
+				"name": "_proposal",
+				"type": "uint256"
+			},
+			{
+				"name": "_position",
+				"type": "uint256"
+			}
+		],
+		"name": "candidatesCount",
+		"outputs": [
+			{
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"name": "_candidateId",
+				"type": "uint256"
+			},
+			{
+				"name": "_positionId",
+				"type": "uint256"
+			},
+			{
+				"name": "_proposalId",
+				"type": "uint256"
+			}
+		],
+		"name": "accreditCandidate",
+		"outputs": [
+			{
+				"name": "",
+				"type": "bool"
+			}
+		],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [
+			{
+				"name": "",
+				"type": "uint256"
+			},
+			{
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"name": "mProposalVoters",
+		"outputs": [
+			{
+				"name": "isVerified",
+				"type": "bool"
+			},
+			{
+				"name": "isVoted",
+				"type": "bool"
+			},
+			{
+				"name": "positionId",
+				"type": "uint256"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"name": "_voter",
+				"type": "address"
+			},
+			{
+				"name": "_IDVoter",
+				"type": "uint256"
+			}
+		],
+		"name": "registerVoter",
+		"outputs": [
+			{
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [
+			{
+				"name": "",
+				"type": "uint256"
+			},
+			{
+				"name": "",
+				"type": "uint256"
+			},
+			{
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"name": "mCandidate",
+		"outputs": [
+			{
+				"name": "candidateId",
+				"type": "uint256"
+			},
+			{
+				"name": "positionId",
+				"type": "uint256"
+			},
+			{
+				"name": "proposalId",
+				"type": "uint256"
+			},
+			{
+				"name": "isAccredited",
+				"type": "bool"
+			},
+			{
+				"name": "isUnique",
+				"type": "bool"
+			},
+			{
+				"name": "candidateAddr",
+				"type": "address"
+			},
+			{
+				"name": "name",
+				"type": "bytes32"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [
+			{
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"name": "allVotes",
+		"outputs": [
+			{
+				"name": "proposalId",
+				"type": "uint256"
+			},
+			{
+				"name": "positionId",
+				"type": "uint256"
+			},
+			{
+				"name": "candidateId",
+				"type": "uint256"
+			},
+			{
+				"name": "voterId",
+				"type": "uint256"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "constructor"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"name": "_voter",
+				"type": "uint256"
+			},
+			{
+				"indexed": true,
+				"name": "_proposal",
+				"type": "uint256"
+			},
+			{
+				"indexed": true,
+				"name": "_position",
+				"type": "uint256"
+			}
+		],
+		"name": "Verified",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"name": "_name",
+				"type": "bytes32"
+			},
+			{
+				"indexed": true,
+				"name": "_proposalId",
+				"type": "uint256"
+			},
+			{
+				"indexed": false,
+				"name": "_endDate",
+				"type": "uint256"
+			}
+		],
+		"name": "NewProposal",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"name": "_proposal",
+				"type": "uint256"
+			},
+			{
+				"indexed": true,
+				"name": "_position",
+				"type": "uint256"
+			},
+			{
+				"indexed": true,
+				"name": "_title",
+				"type": "bytes32"
+			}
+		],
+		"name": "NewPosition",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"name": "_proposal",
+				"type": "uint256"
+			},
+			{
+				"indexed": true,
+				"name": "_position",
+				"type": "uint256"
+			},
+			{
+				"indexed": false,
+				"name": "_candidateId",
+				"type": "uint256"
+			},
+			{
+				"indexed": true,
+				"name": "_name",
+				"type": "bytes32"
+			}
+		],
+		"name": "NewCandidate",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"name": "_proposal",
+				"type": "uint256"
+			},
+			{
+				"indexed": true,
+				"name": "_position",
+				"type": "uint256"
+			},
+			{
+				"indexed": true,
+				"name": "_candidate",
+				"type": "uint256"
+			},
+			{
+				"indexed": false,
+				"name": "_voter",
+				"type": "uint256"
+			},
+			{
+				"indexed": false,
+				"name": "_voterAddr",
+				"type": "address"
+			}
+		],
+		"name": "Voted",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"name": "_voter",
+				"type": "address"
+			},
+			{
+				"indexed": false,
+				"name": "_idHash",
+				"type": "uint256"
+			}
+		],
+		"name": "NewVoter",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"name": "_candidate",
+				"type": "uint256"
+			},
+			{
+				"indexed": true,
+				"name": "_proposal",
+				"type": "uint256"
+			},
+			{
+				"indexed": true,
+				"name": "_position",
+				"type": "uint256"
+			}
+		],
+		"name": "Accredited",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"name": "_proposal",
+				"type": "uint256"
+			}
+		],
+		"name": "ProposalActive",
+		"type": "event"
+	}
+]

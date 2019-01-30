@@ -11,10 +11,11 @@ encryption_keys:
 ethereum:
   network: https://rinkeby.infura.io/wvxLGQSZBjP3Ak7iqt8J
   mnemonic: alcohol begin science tuition clock twelve creek damp betray welcome vessel bounce
+  smartcontract: 0x818987648bcd8963c113bd92ea6ef39f6ecb286c
 dbconfig:
   hostname: localhost
   database: bitballot
   password: bitballot
   username: bitballot
   port: 5433
-
+  

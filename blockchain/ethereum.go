@@ -23,20 +23,19 @@ import (
 )
 
 var err error
-var client *ethclient.Client
+var Client *ethclient.Client
 const WEI = 1000000000000000000
 
-var ETHAddress = 0
-
+var ETHAddressNum = 0
 
 //EthClientDial ...
 func EthClientDial() {
-	client, err = ethclient.Dial(config.Get().Ethereum.Network)
+	Client, err = ethclient.Dial(config.Get().Ethereum.Network)
 	if err != nil {
 		log.Fatal(err)
 	}
 	fmt.Println("we have a connection to Infura network: " + config.Get().Ethereum.Network)
-	_ = client
+	_ = Client
 }
 
 //ETHNewMnemonic ...
@@ -57,13 +56,12 @@ func EthGenerateKey(level int) (privateKey *ecdsa.PrivateKey, fromAddress common
 	
 	seed := bip39.NewSeed(config.Get().Ethereum.Mnemonic, "")
 	masterPrivateKey, _ := bip32.NewMasterKey(seed)
-	masterPublicKey := masterPrivateKey.PublicKey()
-
 	
+	// masterPublicKey := masterPrivateKey.PublicKey()	
 	// Display mnemonic and keys
-	fmt.Printf("Mnemonic: [%v] \n",config.Get().Ethereum.Mnemonic)
-	fmt.Println("Master private key: ", masterPrivateKey)
-	fmt.Println("Master public key: ", masterPublicKey.PublicKey())
+	// fmt.Printf("Mnemonic: [%v] \n",config.Get().Ethereum.Mnemonic)
+	// fmt.Println("Master private key: ", masterPrivateKey)
+	// fmt.Println("Master public key: ", masterPublicKey.PublicKey())
 
 	const Purpose uint32 = 0x8000002C
 	const CoinEther uint32 = 0x8000003c
@@ -106,14 +104,14 @@ func EthGenerateKey(level int) (privateKey *ecdsa.PrivateKey, fromAddress common
 //EthAccountTransfer ...
 func EthAccountTransfer(amount float64, fromAddress, toAddress common.Address, privateKey *ecdsa.PrivateKey) {
 	//Get the Nonce
-	nonce, err := client.PendingNonceAt(context.Background(), fromAddress)
+	nonce, err := Client.PendingNonceAt(context.Background(), fromAddress)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	value := big.NewInt(int64(amount * WEI)) // in WEI (1 eth)
 	gasLimit := uint64(21000)                // in units
-	gasPrice, err := client.SuggestGasPrice(context.Background())
+	gasPrice, err := Client.SuggestGasPrice(context.Background())
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -125,7 +123,7 @@ func EthAccountTransfer(amount float64, fromAddress, toAddress common.Address, p
 		log.Fatal(err)
 	}
 
-	err = client.SendTransaction(context.Background(), signedTx)
+	err = Client.SendTransaction(context.Background(), signedTx)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -136,17 +134,17 @@ func EthAccountTransfer(amount float64, fromAddress, toAddress common.Address, p
 
 //EthAccountBal ...
 func EthAccountBal(address string, block int64) (balance *big.Int, err error) {
-	if client == nil {
+	if Client == nil {
 		EthClientDial()
 	}
 
-	if client != nil {
+	if Client != nil {
 		var blockNumber *big.Int
 		if block > 0 {
 			blockNumber = big.NewInt(block)
 		}
 		account := common.HexToAddress(address)
-		balance, err = client.BalanceAt(context.Background(), account, blockNumber)
+		balance, err = Client.BalanceAt(context.Background(), account, blockNumber)
 
 		if err != nil {
 			log.Println("Account Balannce error: ", err.Error())
